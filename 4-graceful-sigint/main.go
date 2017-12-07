@@ -13,10 +13,27 @@
 
 package main
 
+import (
+	"os"
+	"os/signal"
+)
+
 func main() {
 	// Create a process
 	proc := MockProcess{}
 
 	// Run the process (blocking)
-	proc.Run()
+	go proc.Run()
+
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt)
+
+	// block main thread til the SIGINT interupt comes in
+	<-c
+
+	go proc.Stop()
+
+	// block main thread from finishing the program before stop
+	// is done gracefully cleanin up
+	<-c
 }
